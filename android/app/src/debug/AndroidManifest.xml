@@ -1,7 +1,23 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- The INTERNET permission is required for development. Specifically,
-         the Flutter tool needs it to communicate with the running application
-         to allow setting breakpoints, to provide hot reload, etc.
-    -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.safetrack">
+
+    <!-- Permisos de ubicación -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- Necesario para mantener el dispositivo despierto mientras se recibe una notificación -->
+    <uses-permission android:name="android.permission.VIBRATE" /> <!-- Opcional, para controlar la vibración del dispositivo -->
+
+    <!-- Agrega este permiso si deseas mostrar notificaciones en Android 8.0 y versiones posteriores -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Permiso para el uso de internet -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application
+        android:usesCleartextTraffic="true">
+        
+        <!-- Meta-datos para la API de Google Maps -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyC_FPl9zAAFbqLqGsvJaoCiYbj0NjMwP2w"/>
+    </application>
 </manifest>

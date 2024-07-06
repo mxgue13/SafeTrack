@@ -2,19 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:safetrack/pages/login_page.dart';
 import 'package:safetrack/pages/register_page.dart';
 
-class Home extends StatefulWidget{
-  
-  const Home({super.key});
+class HomeWidget extends StatefulWidget {
+  const HomeWidget({super.key});
+
   @override
-  State<StatefulWidget> createState(){
-    return _HomeState();
-  }
+  _HomeWidgetState createState() => _HomeWidgetState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeWidgetState extends State<HomeWidget> {
   int _selectedIndex = 0;
+
+  static const List<Widget> _pages = <Widget>[
+    LoginPage(),
+    RegisterPage(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
-    Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -26,33 +36,25 @@ class _HomeState extends State<Home> {
           ),
         ),
         centerTitle: true, // Centra el título
-        backgroundColor:const Color.fromARGB(255, 126, 227, 252),
+        backgroundColor: const Color.fromARGB(255, 126, 227, 252),
       ),
       body: Center(
-        child: _selectedIndex == 0
-            ? const LoginPage()
-            : const RegisterPage(),
+        child: _pages[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.login, size:30),
+            icon: Icon(Icons.login, size: 30),
             label: 'Iniciar Sesión',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_add, size:30),
+            icon: Icon(Icons.person_add, size: 30),
             label: 'Registrarse',
           ),
         ],
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-        selectedFontSize: 20,
-        unselectedFontSize: 20,
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blue,
+        onTap: _onItemTapped,
       ),
     );
   }

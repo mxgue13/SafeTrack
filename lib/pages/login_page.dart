@@ -1,9 +1,8 @@
-//import 'package:animated_text_kit/animated_text_kit.dart';
-// ignore_for_file: prefer_const_constructors, use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutterflow_ui/flutterflow_ui.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:safetrack/widgets/custom_alert.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,7 +20,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final supabase = Supabase.instance.client;
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController userNameController = TextEditingController();
+  final TextEditingController documentController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +33,10 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 // ignore: prefer_const_literals_to_create_immutables
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     height: 20.0,
                   ),
-                  Padding(
+                  const Padding(
                     padding: EdgeInsets.only(left: 10.0, right: 10.0),
                     child: Align(
                       alignment: Alignment.topLeft,
@@ -51,22 +50,22 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 15.0,
                   ),
-                  _textFieldUserName(),
-                  SizedBox(
+                  _textFieldDocument(),
+                  const SizedBox(
                     height: 30.0,
                   ),
                   _textFieldContrasena(),
-                  SizedBox(
+                  const SizedBox(
                     height: 10.0,
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 10.0,
                   ),
                   FFButtonWidget(
-                    onPressed: () => signIn(context),
+                    onPressed: () => iniciarSesion(context),
                     text: 'Iniciar Sesion',
                     options: FFButtonOptions(
                       width: 230,
@@ -91,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(40),
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 3.0,
                   ),
                 ]),
@@ -101,14 +100,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _textFieldUserName() {
+  Widget _textFieldDocument() {
     return _TextFieldGeneral(
-        labelText: "Usuario",
-        icon: Icons.person_outline,
-        hintText: "Digite su nombre",
-        onChanged: (value) {},
-        controller: userNameController,
-        type: 'UserName');
+      labelText: "Email",
+      icon: Icons.insert_drive_file,
+      hintText: "Digite su email",
+      onChanged: (value) {},
+      controller: documentController,
+      type: 'number', // Cambiado a tipo numérico si el documento es un número
+    );
   }
 
   Widget _textFieldContrasena() {
@@ -128,45 +128,26 @@ class _LoginPageState extends State<LoginPage> {
     final session = supabase.auth.currentSession;
     if (session!=null) {
       supabase.auth.signOut();
-    } 
+    }
   }
 
- Future<void> signIn(BuildContext context) async {
+  Future<void> iniciarSesion(context) async {
+    final supabase = Supabase.instance.client;
+
     try {
-      if(userNameController.text == '' || passwordController.text == ''){
-        showCustomErrorDialog(context, "¡Por favor llenar todos los campos del formulario!");
-        return;
-      }
-      if(passwordController.text.length < 6){
-        showCustomErrorDialog(context, "¡La contraseña debe tener minimo 6 caracteres!");
-        return;
-      }
+      final response = await supabase.auth.signInWithPassword(
+        email: documentController.text,
+        password: passwordController.text,
+      );
 
-      //Consulta para ver si el usuario esta registrado:
-      final usuario = userNameController.text;
-      final datos = await supabase
-      .from('Usuario')
-      .select('numero_doc')
-      .eq('numero_doc', usuario);
-
-      if(datos.length == 1){ 
-        try {
-          //Sign In por medio de auth - Supabase
-          await supabase.auth.signInWithPassword(
-            password: passwordController.text.trim(),
-            email: datos[0]['correo}']
-          );
-        } catch (e) {
-          showCustomErrorDialog(context, "¡Contraseña Incorrecta, Intentelo Nuevamente!");
-        }
+      if (response.user != null) {
+        // Inicio de sesión exitoso, redirige al usuario a la página principal o muestra un mensaje de éxito
+        Navigator.pushReplacementNamed(context, '/location');
+      } else {
+        showCustomErrorDialog(context, "Correo o contraseña incorrectos");
       }
-      else {
-        showCustomErrorDialog(context, "El usuario '$usuario' NO esta registrado en el sistema de Safetrack. \n\n¡Porfavor registrese!");
-        return;
-      }
-    } on Exception catch (e) {
-      final error = e.toString();
-      showCustomErrorDialog(context, "Ha ocurrido un error Inesperado: \n\n$error");
+    } catch (e) {
+      showCustomErrorDialog(context, "Error inesperado durante el inicio de sesión");
     }
   }
 }
@@ -208,7 +189,7 @@ class _TextFieldGeneralState extends State<_TextFieldGeneral> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(
+      margin: const EdgeInsets.symmetric(
         horizontal: 22.0,
       ),
       decoration: BoxDecoration(

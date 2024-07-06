@@ -7,7 +7,7 @@ class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<RegisterPage> createState() =>_RegisterPageState();
 }
 
 List<String> listaTipoDocumento = ['C.C', 'C.E', 'R.C', 'T.I'];
@@ -29,7 +29,6 @@ class _RegisterPageState extends State<RegisterPage> {
           child: SingleChildScrollView(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
-                // ignore: prefer_const_literals_to_create_immutables
                 children: [
                   const Padding(
                     padding: EdgeInsets.only(left: 10.0, right: 10.0),
@@ -171,9 +170,8 @@ class _RegisterPageState extends State<RegisterPage> {
           padding: const EdgeInsets.symmetric(horizontal: 22.0),
           child: Container(
             width: double.infinity,
-            height: 60, // Ajusta el ancho al máximo
-            constraints:
-                const BoxConstraints(maxWidth: 400), // Ajusta el ancho máximo
+            height: 60,
+            constraints: const BoxConstraints(maxWidth: 400),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
@@ -189,8 +187,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Padding(
-                    padding:
-                        const EdgeInsets.only(left: 8.0), // Margen izquierdo
+                    padding: const EdgeInsets.only(left: 8.0),
                     child: Text(value,
                         style: const TextStyle(
                           fontWeight: FontWeight.normal,
@@ -208,7 +205,6 @@ class _RegisterPageState extends State<RegisterPage> {
       ],
     );
   }
-
 
   Widget _textFieldContrasena() {
     return _TextFieldGeneral(
@@ -240,180 +236,137 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> registrarse(context) async {
-    final supabase = Supabase.instance.client;
+  final supabase = Supabase.instance.client;
 
-    Map<String, int> tipoDocumento = {
-      'C.C': 1,
-      'C.E': 2,
-      'R.C': 3,
-      'T.I': 4,
-    };
+  Map<String, int> tipoDocumento = {
+    'C.C': 1,
+    'C.E': 2,
+    'R.C': 3,
+    'T.I': 4,
+  };
 
-    try {
-      if (nameController.text == "" ||
-          documentController.text == "" ||
-          emailController.text == "" ||
-          passwordController.text == "" ||
-          repeatPasswordController.text == "") {
-        showCustomErrorDialog(context, "¡Por favor llenar todos los campos del formulario!");
-        return;
-      }
-      if (validarEmail(emailController.text) != true) {
-        showCustomErrorDialog(context, "¡Digite un email valido!");
-        return;
-      }
-      if (passwordController.text.length < 6 ||
-          repeatPasswordController.text.length < 6) {
-        showCustomErrorDialog(
-            context, "¡Las contraseñas deben tener minimo 6 caracteres!");
-        return;
-      }
-      if (passwordController.text != repeatPasswordController.text) {
-        showCustomErrorDialog(context, "Las contraseñas no coinciden");
-        return;
-      }
-
-      try {
-        final verificacion2 = await supabase
-            .from('Usuario')
-            .select('numero_doc')
-            .eq("numero_doc", documentController.text);
-        
-        //si un empleado con diferente user_name se quiere escribir manda error
-        if (verificacion2.isNotEmpty){
-          showCustomErrorDialog(context, '¡Existe un usuario registrado con ese número de documento!');
-          return;
-        }
-      } catch (e) {
-        showCustomErrorDialog(context, '¡Error interno de la DB!');
-        return;
-      }
-
-      try {
-        //Se genera el usuario
-        await supabase.auth.signUp(
-          email: emailController.text,
-          password: passwordController.text,
-        );
-      } catch (e) {
-        showCustomErrorDialog(context, "¡Ya existe un usuario registrado con ese correo electronico!");
-        return;
-      }
-
-      try {
-        //si crear el usuario no da error, se inserta la persona
-        await supabase.from('Usuario').insert({
-          'nombre_com': nameController.text,
-          'tipo_doc': tipoDocumento[dropdownValueTD],
-          'numero_doc': documentController.text
-        });
-      } catch (e) {
-        showCustomErrorDialog(context, e.toString());
-        return;
-      }
-
-      try {
-        //Al registrarse, inicia sesion, por lo que instantaneamente se cierra
-        await supabase.auth.signOut();
-        showCustomExitDialog(context, "¡Se creo el usuario Exitosamente!");
-        _limpiarCampos();
-      } catch (e) {
-        showCustomErrorDialog(context, e.toString());
-      }
-
-    } catch (e) {
-      showCustomErrorDialog(context, e.toString());
+  try {
+    if (nameController.text.isEmpty ||
+        documentController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        passwordController.text.isEmpty ||
+        repeatPasswordController.text.isEmpty) {
+      showCustomErrorDialog(context, "¡Por favor llenar todos los campos del formulario!");
       return;
     }
-  }
+    if (!validarEmail(emailController.text)) {
+      showCustomErrorDialog(context, "¡Digite un email valido!");
+      return;
+    }
+    if (passwordController.text.length < 6 || repeatPasswordController.text.length < 6) {
+      showCustomErrorDialog(context, "¡Las contraseñas deben tener mínimo 6 caracteres!");
+      return;
+    }
+    if (passwordController.text != repeatPasswordController.text) {
+      showCustomErrorDialog(context, "Las contraseñas no coinciden");
+      return;
+    }
 
-  void _limpiarCampos() {
-    nameController.clear();
-    emailController.clear();
-    passwordController.clear();
-    repeatPasswordController.clear();
-    documentController.clear();
+    final verificacion2 = await supabase
+        .from('Usuario')
+        .select('numero_doc')
+        .eq("numero_doc", documentController.text);
+
+    if (verificacion2.isNotEmpty) {
+      showCustomErrorDialog(context, '¡Existe un usuario registrado con ese número de documento!');
+      return;
+    }
+
+    final response = await supabase.auth.signUp(
+      email: emailController.text,
+      password: passwordController.text,
+    );
+
+    if (response.user != null) {
+      await supabase.from('Usuario').insert({
+        'nombre_com': nameController.text,
+        'tipo_doc': tipoDocumento[dropdownValueTD],
+        'numero_doc': documentController.text,
+        'email': emailController.text,
+      });
+
+      await supabase.auth.signOut();
+      showCustomExitDialog(context, "¡Se creó el usuario exitosamente!");
+      _limpiarCampos();
+    }
+  } catch (e) {
+    showCustomErrorDialog(context, "Error inesperado durante el registro: $e");
   }
 }
 
-class _TextFieldGeneral extends StatefulWidget {
+void _limpiarCampos() {
+  nameController.clear();
+  emailController.clear();
+  passwordController.clear();
+  repeatPasswordController.clear();
+  documentController.clear();
+}
+
+}
+
+class _TextFieldGeneral extends StatelessWidget {
   final String labelText;
-  final String? hintText;
-  final Function(String) onChanged;
-  final TextInputType? keyboardType;
+  final TextInputType keyboardType;
   final IconData icon;
+  final String hintText;
+  final Function(String) onChanged;
+  final TextEditingController controller;
   final bool obscureText;
   final String type;
-  final TextEditingController controller;
 
-  const _TextFieldGeneral(
-      {required this.labelText,
-      this.hintText,
-      required this.onChanged,
-      this.keyboardType,
-      required this.icon,
-      this.obscureText = false,
-      required this.type,
-      required this.controller});
-
-  @override
-  _TextFieldGeneralState createState() => _TextFieldGeneralState();
-}
-
-class _TextFieldGeneralState extends State<_TextFieldGeneral> {
-  late bool _obscureText;
-
-  @override
-  void initState() {
-    super.initState();
-    _obscureText = widget.obscureText;
-  }
+  const _TextFieldGeneral({
+    required this.labelText,
+    required this.keyboardType,
+    required this.icon,
+    required this.hintText,
+    required this.onChanged,
+    required this.controller,
+    this.obscureText = false,
+    required this.type,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: 22.0,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: TextField(
-        controller: widget.controller,
-        keyboardType: widget.keyboardType,
-        obscureText: _obscureText,
-        decoration: _buildInputDecoration(),
-        onChanged: widget.onChanged,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22.0),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              labelText,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 5.0),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: TextFormField(
+                controller: controller,
+                keyboardType: keyboardType,
+                obscureText: obscureText,
+                decoration: InputDecoration(
+                  hintText: hintText,
+                  prefixIcon: Icon(icon),
+                  border: InputBorder.none,
+                ),
+                onChanged: onChanged,
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-//Permite Mostrar o Esconder la Contraseña
-  InputDecoration _buildInputDecoration() {
-    if (widget.type == 'password') {
-      return InputDecoration(
-        prefixIcon: Icon(widget.icon),
-        labelText: widget.labelText,
-        hintText: widget.hintText,
-        suffixIcon: GestureDetector(
-          onTap: () {
-            setState(() {
-              _obscureText = !_obscureText;
-            });
-          },
-          child: Icon(
-            _obscureText ? Icons.visibility : Icons.visibility_off,
-            color: Colors.grey,
-          ),
-        ),
-      );
-    } else {
-      return InputDecoration(
-        prefixIcon: Icon(widget.icon),
-        labelText: widget.labelText,
-        hintText: widget.hintText,
-      );
-    }
   }
 }
